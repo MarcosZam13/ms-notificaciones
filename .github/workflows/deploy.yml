@@ -1,0 +1,32 @@
+name: Build & Deploy — ms-notificaciones
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # permite disparar manualmente desde GitHub Actions
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy a Azure App Service
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # Python no necesita compilación — se empaqueta el código fuente directamente
+      - name: Empaquetar para deploy
+        run: |
+          zip -r deploy.zip . \
+            --exclude "*.git*" \
+            --exclude "__pycache__/*" \
+            --exclude "*.pyc" \
+            --exclude ".env*" \
+            --exclude "*.log"
+
+      - name: Deploy a Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ms-notificaciones
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_MS_NOTIFICACIONES }}
+          package: deploy.zip
