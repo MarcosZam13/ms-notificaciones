@@ -3,7 +3,7 @@ name: Build & Deploy — ms-notificaciones
 on:
   push:
     branches: [main]
-  workflow_dispatch:   # permite disparar manualmente desde GitHub Actions
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -14,7 +14,6 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
 
-      # Python no necesita compilación — se empaqueta el código fuente directamente
       - name: Empaquetar para deploy
         run: |
           zip -r deploy.zip . \
@@ -22,11 +21,19 @@ jobs:
             --exclude "__pycache__/*" \
             --exclude "*.pyc" \
             --exclude ".env*" \
-            --exclude "*.log"
+            --exclude "*.log" \
+            --exclude "deploy-notificaciones.zip"
 
-      - name: Deploy a Azure App Service
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ms-notificaciones
-          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE_MS_NOTIFICACIONES }}
-          package: deploy.zip
+      - name: Deploy a Azure App Service via Kudu ZIP API
+        env:
+          KUDU_CREDENTIALS: ${{ secrets.KUDU_CREDENTIALS_MS_NOTIFICACIONES }}
+        run: |
+          curl -X POST \
+            "https://ms-notificaciones.scm.azurewebsites.net/api/zipdeploy?isAsync=false" \
+            -u "$KUDU_CREDENTIALS" \
+            -H "Content-Type: application/zip" \
+            --data-binary @deploy.zip \
+            --fail \
+            --show-error \
+            --silent \
+            -w "\nHTTP status: %{http_code}\n"
