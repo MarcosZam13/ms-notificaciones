@@ -26,11 +26,12 @@ jobs:
 
       - name: Deploy a Azure App Service via Kudu ZIP API
         env:
-          KUDU_CREDENTIALS: ${{ secrets.KUDU_CREDENTIALS_MS_NOTIFICACIONES }}
+          KUDU_USER: ${{ secrets.KUDU_USER_MS_NOTIFICACIONES }}
+          KUDU_PASS: ${{ secrets.KUDU_PASS_MS_NOTIFICACIONES }}
         run: |
           curl -X POST \
             "https://ms-notificaciones.scm.azurewebsites.net/api/zipdeploy?isAsync=false" \
-            -u "$KUDU_CREDENTIALS" \
+            -u "${KUDU_USER}:${KUDU_PASS}" \
             -H "Content-Type: application/zip" \
             --data-binary @deploy.zip \
             --fail \
