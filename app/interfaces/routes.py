@@ -93,14 +93,11 @@ def _verificar_propiedad_token(payload: dict, usuario_id: str) -> None:
     Raises:
         HTTPException 403 si no hay coincidencia.
     """
-    token_user_id = (
-        payload.get("sub")
-        or payload.get("user_id")
-        or payload.get("id")
-        or payload.get("oid")
-    )
+    # MS Usuarios (Spring Boot) emite el ID en 'sub' (RFC 7519 estándar).
+    # Fallback a 'user_id' por si la implementación usa ese claim en su lugar.
+    token_user_id = payload.get("sub") or payload.get("user_id")
     if not token_user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token sin claim de usuario (sub/user_id/id/oid)")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token sin claim de usuario (sub)")
     if token_user_id != usuario_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
